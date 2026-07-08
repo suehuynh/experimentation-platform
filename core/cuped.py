@@ -60,21 +60,31 @@ class CUPEDResult:
     variance_reduction_pct: float
 
     def summary(self) -> str:
-        """Return a human-readable comparison of raw vs. adjusted readouts.
-
-        Returns:
-            Multi-line string covering covariate correlation, theta,
-            variance reduction, and a side-by-side comparison of
-            p-values and CI widths before and after adjustment.
-        """
-        # TODO: Format and return a report string covering:
-        #   - covariate_correlation and theta
-        #   - variance_reduction_pct
-        #   - raw p_value and CI width (raw_result.ci_upper - raw_result.ci_lower)
-        #   - adjusted p_value and CI width (adjusted_result.ci_upper - adjusted_result.ci_lower)
-        #   - plain-English note on whether adjustment improved significance:
-        #       e.g. "CUPED tightened the CI by X% and reduced p-value from A to B."
-        ...
+        raw_ci_width = self.raw_result.ci_upper - self.raw_result.ci_lower
+        adj_ci_width = self.adjusted_result.ci_upper - self.adjusted_result.ci_lower
+        ci_improvement_pct = (1 - adj_ci_width / raw_ci_width) * 100 if raw_ci_width > 0 else 0.0
+        conclusion = (
+            f"CUPED tightened the CI by {ci_improvement_pct:.1f}% and reduced "
+            f"p-value from {self.raw_result.p_value:.4f} to "
+            f"{self.adjusted_result.p_value:.4f}."
+        )
+        return (
+            f"CUPED Variance Reduction Report\n"
+            f"{'=' * 50}\n"
+            f"Covariate correlation : {self.covariate_correlation:+.4f}\n"
+            f"Theta (θ)             : {self.theta:+.4f}\n"
+            f"Variance reduction    : {self.variance_reduction_pct:.1f}%\n"
+            f"{'─' * 50}\n"
+            f"                        {'Raw':>12}  {'Adjusted':>12}\n"
+            f"p-value               : {self.raw_result.p_value:>12.4f}  "
+            f"{self.adjusted_result.p_value:>12.4f}\n"
+            f"CI width              : {raw_ci_width:>12.4f}  "
+            f"{adj_ci_width:>12.4f}\n"
+            f"Significant           : {str(self.raw_result.significant):>12}  "
+            f"{str(self.adjusted_result.significant):>12}\n"
+            f"{'─' * 50}\n"
+            f"Conclusion            : {conclusion}\n"
+        )
 
 
 # ---------------------------------------------------------------------------
