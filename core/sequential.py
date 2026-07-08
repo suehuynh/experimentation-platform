@@ -64,20 +64,26 @@ class SequentialResult:
     mlr_history: list[float] = field(default_factory=list)
 
     def summary(self) -> str:
-        """Return a human-readable snapshot of the current sequential test state.
-
-        Returns:
-            Multi-line string covering sample sizes, current MLR, always-valid
-            p-value, rejection threshold, and a plain-English status line.
-        """
-        # TODO: Format and return a report string covering:
-        #   - n_control and n_treatment
-        #   - mixture_likelihood_ratio vs rejection threshold (1 / alpha)
-        #   - always_valid_pvalue vs alpha
-        #   - rejected status:
-        #       "REJECTED: sufficient evidence to stop the experiment." or
-        #       "CONTINUING: insufficient evidence to reject H0."
-        ...
+        rejection_threshold = 1 / self.alpha
+        status = (
+            "REJECTED: sufficient evidence to stop the experiment."
+            if self.rejected
+            else "CONTINUING: insufficient evidence to reject H0."
+        )
+        return (
+            f"Sequential Test Snapshot (mSPRT)\n"
+            f"{'=' * 50}\n"
+            f"Observations    : control n={self.n_control:,}, "
+            f"treatment n={self.n_treatment:,}\n"
+            f"{'─' * 50}\n"
+            f"MLR             : {self.mixture_likelihood_ratio:.4f} "
+            f"(threshold: {rejection_threshold:.2f})\n"
+            f"Always-valid p  : {self.always_valid_pvalue:.4f} "
+            f"(alpha: {self.alpha})\n"
+            f"Updates logged  : {len(self.mlr_history):,}\n"
+            f"{'─' * 50}\n"
+            f"Status          : {status}\n"
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -171,7 +177,8 @@ class SequentialTester:
             the batch provided evidence in favour of H1; values < 1
             indicate evidence in favour of H0.
         """
-        n_c = len(control_batch), n_t = len(treatment_batch)
+        n_c = len(control_batch)
+        n_t = len(treatment_batch)
         d_bar = np.mean(treatment_batch) - np.mean(control_batch)
         pooled_var = (
                 (n_c - 1) * np.var(control_batch, ddof=1) +
@@ -209,9 +216,9 @@ class SequentialTester:
         Returns:
             Updated SequentialResult reflecting the new accumulated state.
         """
-        assert len(control_batch) <= 0 or len(treatment_batch) <= 0, f"Control/Treatment Batch is empty. Control Batch: {len(control_batch)}. Treatment Batch: {len(treatment_batch)}"
-        assert np.any(~np.isfinite(control_batch)) or np.any(~np.isfinite(treatment_batch)), f"Control/Batch has infinite values."
-        assert self._result.rejected == False, f"Experiment already rejected H0. Call reset() before reuse."
+        assert len(control_batch) > 0 and len(treatment_batch) > 0, f"Control/Treatment Batch is empty. Control Batch: {len(control_batch)}. Treatment Batch: {len(treatment_batch)}"
+        assert np.all(np.isfinite(control_batch)) and np.all(np.isfinite(treatment_batch)), f"Control/Batch has infinite values."
+        assert self._result.rejected, f"Experiment already rejected H0. Call reset() before reuse."
 
         self._result.n_control += len(control_batch)
         self._result.n_treatment += len(treatment_batch)
