@@ -6,3 +6,8 @@ pluggy==1.6.0
 Pygments==2.20.0
 pytest==9.1.1
 scipy==1.18.0
+streamlit
+scipy
+pandas
+matplotlib
+
