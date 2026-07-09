@@ -218,7 +218,7 @@ class SequentialTester:
         """
         assert len(control_batch) > 0 and len(treatment_batch) > 0, f"Control/Treatment Batch is empty. Control Batch: {len(control_batch)}. Treatment Batch: {len(treatment_batch)}"
         assert np.all(np.isfinite(control_batch)) and np.all(np.isfinite(treatment_batch)), f"Control/Batch has infinite values."
-        assert self._result.rejected, f"Experiment already rejected H0. Call reset() before reuse."
+        assert not self._result.rejected, "Experiment already rejected H0. Call reset() before reuse."
 
         self._result.n_control += len(control_batch)
         self._result.n_treatment += len(treatment_batch)
