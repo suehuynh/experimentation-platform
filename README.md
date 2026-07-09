@@ -34,6 +34,9 @@ experimentation_platform/
 │   ├── test_core.py
 │   ├── test_assignment.py
 │   └── conftest.py
+├── smoke_test.py
+├── requirements.txt
+├── README.md
 └── pyproject.toml
 ```
 
