@@ -31,6 +31,9 @@ experimentation_platform/
 ├── app/
 │   └── streamlit_console.py
 ├── tests/
+│   ├── test_core.py
+│   ├── test_assignment.py
+│   └── conftest.py
 └── pyproject.toml
 ```
 
